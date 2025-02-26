@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>クリップパスで画像レイヤーを開くアニメーション</title>
+<style>
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#overlay.active {
+  opacity: 1;
+}
+.layer1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+}
+.layer2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* 背景画像はローカルの画像ファイルを指定 */
+  background: url('image.png') no-repeat center/cover;
+  clip-path: circle(0px at var(--clip-x) var(--clip-y));
+  transition: clip-path 3s ease-out;
+  filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+}
+#myButton {
+  position: relative;
+  z-index: 10;
+  margin: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+<button id="myButton">ボタンを押す</button>
+<div id="overlay">
+  <div class="layer1"></div>
+  <div class="layer2"></div>
+</div>
+<script>
+const button = document.getElementById('myButton');
+const overlay = document.getElementById('overlay');
+const layer2 = overlay.querySelector('.layer2');
+
+// 固定の開始位置（左右・上下も指定）
+const pos1 = { x: window.innerWidth * 0.2, y: window.innerHeight * 0.1 };
+const pos2 = { x: window.innerWidth * 0.8, y: window.innerHeight * 0.9 };
+
+// 画面全体を覆うための半径（対角線の長さ）
+const radius = Math.hypot(window.innerWidth, window.innerHeight);
+
+button.addEventListener('click', () => {
+  overlay.classList.add('active');
+  
+  // 左側のクリップパス用要素
+  const ripple1 = document.createElement('div');
+  ripple1.classList.add('ripple');
+  ripple1.style.setProperty('--clip-x', pos1.x + 'px');
+  ripple1.style.setProperty('--clip-y', pos1.y + 'px');
+  layer2.appendChild(ripple1);
+  
+  // 右側のクリップパス用要素
+  const ripple2 = document.createElement('div');
+  ripple2.classList.add('ripple');
+  ripple2.style.setProperty('--clip-x', pos2.x + 'px');
+  ripple2.style.setProperty('--clip-y', pos2.y + 'px');
+  layer2.appendChild(ripple2);
+  
+  // 強制リフロー
+  void ripple1.offsetWidth;
+  void ripple2.offsetWidth;
+  
+  // 左側は即時にアニメーション開始
+  ripple1.style.clipPath = `circle(${radius}px at ${pos1.x}px ${pos1.y}px)`;
+  
+  // 右側は少し遅れて開始（例：200ms後）
+  setTimeout(() => {
+    ripple2.style.clipPath = `circle(${radius}px at ${pos2.x}px ${pos2.y}px)`;
+  }, 200);
+  
+  // 3秒後にオーバーレイを非表示＆要素削除
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    ripple1.remove();
+    ripple2.remove();
+  }, 3000);
+});
+</script>
+</body>
+</html>
